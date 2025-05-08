@@ -1,17 +1,22 @@
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer
 import urllib.parse
-from html import load_html
 from pathlib import Path
 
-TEMPLATES_FOLDER = Path("Templates")
+TEMPLATE_FOLDER = Path("Templates")
 PORT = 8080
 DATABASE_FILE = "db.txt"
+
+def load_html(filename):
+    path = TEMPLATE_FOLDER / filename
+    if path.exists():
+        return path.read_bytes()
+    return None
 
 class TemplateHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
-            self.respond_with_template("register.html")
+            self.respond_with_template("registration.html")
         elif self.path.startswith("/search") and "query=" in self.path:
             self.handle_search()
         elif self.path == "/search":
@@ -55,7 +60,7 @@ class TemplateHandler(SimpleHTTPRequestHandler):
         if load_html(filename):
             self.respond_with_template(filename)
         else:
-            self.respond_with_template("404.html")
+            self.respond_with_template("redirection.html")
 
     def handle_search_direct(self):
         term = self.path.lstrip("/")
@@ -63,13 +68,13 @@ class TemplateHandler(SimpleHTTPRequestHandler):
         if load_html(filename):
             self.respond_with_template(filename)
         else:
-            self.respond_with_template("404.html")
+            self.respond_with_template("redirection.html")
 
     def respond_not_found(self):
         self.send_response(404)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        content = load_html("404.html") or b"<h1>Not found</h1>"
+        content = load_html("redirection.html") or b"<h1>404 Not Found</h1>"
         self.wfile.write(content)
 
 if __name__ == "__main__":
